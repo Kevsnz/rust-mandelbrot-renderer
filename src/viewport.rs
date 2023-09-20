@@ -16,6 +16,11 @@ impl Viewport {
         }
     }
 
+    pub fn set_center(&mut self, center_x: f64, center_y: f64) {
+        self.center_x = center_x;
+        self.center_y = center_y;
+    }
+
     pub fn zoom_in(&mut self, step: Option<f64>) {
         self.scale *= step.unwrap_or(SCALE_STEP);
     }
@@ -27,7 +32,7 @@ impl Viewport {
     pub fn shift_left(&mut self, step: Option<f64>) {
         self.center_x -= self.scale * step.unwrap_or(OFFSET_STEP);
     }
-    
+
     pub fn shift_right(&mut self, step: Option<f64>) {
         self.center_x += self.scale * step.unwrap_or(OFFSET_STEP);
     }
