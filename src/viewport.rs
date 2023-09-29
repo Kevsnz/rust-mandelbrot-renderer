@@ -16,9 +16,15 @@ impl Viewport {
         }
     }
 
-    pub fn set_center(&mut self, center_x: f64, center_y: f64) {
+    pub fn set_center(&mut self, center_x: f64, center_y: f64) -> &mut Self {
         self.center_x = center_x;
         self.center_y = center_y;
+        self
+    }
+
+    pub fn set_scale(&mut self, scale: f64) -> &mut Self {
+        self.scale = scale;
+        self
     }
 
     pub fn zoom_in(&mut self, step: Option<f64>) {

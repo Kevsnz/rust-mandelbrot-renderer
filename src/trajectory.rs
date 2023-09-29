@@ -41,18 +41,25 @@ impl std::ops::Mul<f64> for Point {
 }
 
 struct Move {
-    target: Point,
+    target_pos: Point,
+    target_scale: f64,
     steps: i32,
 }
 
 impl Move {
-    fn new(target: Point, steps: i32) -> Move {
-        Move { target, steps }
+    fn new(target_pos: Point, target_scale: f64, steps: i32) -> Move {
+        Move {
+            target_pos,
+            target_scale,
+            steps,
+        }
     }
 
-    fn step(&self, point: Point, current_step: i32) -> Point {
-        let step = (self.target - point) * (1.0 / (self.steps - current_step) as f64);
-        point + step
+    fn step(&self, pos: Point, scale: f64, current_step: i32) -> (Point, f64) {
+        let step_pos = (self.target_pos - pos) * (1.0 / (self.steps - current_step) as f64);
+        let step_scale = (self.target_scale - scale) / (self.steps - current_step) as f64;
+
+        (pos + step_pos, scale + step_scale)
     }
 
     fn finished(&self, current_step: i32) -> bool {
@@ -75,20 +82,21 @@ impl Trajectory {
         }
     }
 
-    pub fn add_move(&mut self, x: f64, y: f64, steps: i32) {
-        self.moves.push(Move::new(Point::new(x, y), steps));
+    pub fn add_move(&mut self, x: f64, y: f64, scale: f64, steps: i32) {
+        self.moves.push(Move::new(Point::new(x, y), scale, steps));
     }
 
-    pub fn step(&mut self, current_position: Point) -> Point {
+    pub fn step(&mut self, current_position: Point, current_scale: f64) -> (Point, f64) {
         let current_move = &self.moves[self.current_move];
-        let new_position = current_move.step(current_position, self.current_step);
+        let (new_position, new_scale) =
+            current_move.step(current_position, current_scale, self.current_step);
         if current_move.finished(self.current_step + 1) {
             self.current_move += 1;
             self.current_step = 0;
         } else {
             self.current_step += 1;
         }
-        new_position
+        (new_position, new_scale)
     }
 
     pub fn finished(&self) -> bool {
