@@ -48,73 +48,86 @@ struct Move {
     target_pos: Point,
     target_scale: f64,
     speed: f64,
-    steps: i32,
 }
 
 impl Move {
-    fn new(target_pos: Point, target_scale: f64, speed: f64, steps: i32) -> Move {
+    fn new(target_pos: Point, target_scale: f64, speed: f64) -> Move {
         Move {
             target_pos,
             target_scale,
             speed,
-            steps,
         }
     }
 
-    fn step(&self, pos: Point, scale: f64, current_step: i32) -> (Point, f64) {
-        let step_pos = (self.target_pos - pos) * (1.0 / (self.steps - current_step) as f64);
-        let step_scale = (self.target_scale - scale) / (self.steps - current_step) as f64;
-
-        (pos + step_pos, scale + step_scale)
-    }
-
-    fn finished(&self, current_step: i32) -> bool {
-        current_step >= self.steps
+    fn get_target(&self) -> (Point, f64) {
+        (self.target_pos, self.target_scale)
     }
 }
 
 pub struct Trajectory {
-    original_position: Point,
     moves: Vec<Move>,
     current_move: usize,
-    current_step: i32,
     dt: f64,
 }
 
 impl Trajectory {
-    pub fn new(original_position: Point, dt: f64) -> Trajectory {
+    pub fn new(dt: f64) -> Trajectory {
         Trajectory {
-            original_position,
             moves: Vec::new(),
             current_move: 0,
-            current_step: 0,
             dt,
         }
     }
 
     pub fn add_move(&mut self, x: f64, y: f64, scale: f64, speed: f64) {
-        let last_pos = match self.moves.last() {
-            Some(last_move) => last_move.target_pos,
-            None => self.original_position,
-        };
         let new_pos = Point::new(x, y);
-        let dist = (new_pos - last_pos).length();
-        let steps = (dist / (speed * self.dt)).ceil() as i32;
-
-        self.moves.push(Move::new(new_pos, scale, speed, steps));
+        self.moves.push(Move::new(new_pos, scale, speed));
     }
 
-    pub fn step(&mut self, current_position: Point, current_scale: f64) -> (Point, f64) {
+    pub fn step(&mut self) -> (Point, f64) {
         let current_move = &self.moves[self.current_move];
-        let (new_position, new_scale) =
-            current_move.step(current_position, current_scale, self.current_step);
-        if current_move.finished(self.current_step + 1) {
-            self.current_move += 1;
-            self.current_step = 0;
-        } else {
-            self.current_step += 1;
-        }
+        let (new_position, new_scale) = current_move.get_target();
+        self.current_move += 1;
         (new_position, new_scale)
+    }
+
+    pub fn smooth(&mut self, original_position: Point, original_scale: f64) {
+        let mut steps_granular: Vec<Move> = Vec::new();
+        let mut last_move = original_position;
+        let mut last_scale = original_scale;
+
+        let mut step_remainder = 0.0;
+        for move_ in self.moves.iter() {
+            let dist = (move_.target_pos - last_move).length();
+            let steps: f64 = dist / (move_.speed * self.dt) - step_remainder;
+
+            for step in 0..steps.floor() as i32 {
+                let new_pos = last_move + (move_.target_pos - last_move) * (step as f64 / steps);
+                let new_scale =
+                    last_scale + (move_.target_scale - last_scale) * (step as f64 / steps);
+                steps_granular.push(Move::new(new_pos, new_scale, 1.0));
+
+                if steps_granular.len() > 5000 {
+                    panic!("Too many steps!");
+                }
+            }
+            step_remainder = steps.fract();
+            last_move = steps_granular.last().unwrap().target_pos;
+            last_scale = steps_granular.last().unwrap().target_scale;
+        }
+
+        let mut steps_smoothed: Vec<Move> = Vec::new();
+        let mut last_pos = original_position;
+        let mut last_scale = original_scale;
+        const A: f64 = 0.9;
+
+        for move_ in steps_granular.iter() {
+            last_pos = last_pos * A + move_.target_pos * (1.0 - A);
+            last_scale = last_scale * A + move_.target_scale * (1.0 - A);
+            steps_smoothed.push(Move::new(last_pos, last_scale, 1.0));
+        }
+
+        self.moves = steps_smoothed;
     }
 
     pub fn finished(&self) -> bool {

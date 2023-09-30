@@ -26,13 +26,14 @@ fn main() {
     let (mut renderer, event_loop) = renderer::Renderer::new(1680, 960, viewport);
 
     let start_pos = Point::new(renderer.get_viewport().center_x, renderer.get_viewport().center_y);
-    let mut trajectory = Trajectory::new(start_pos, 1.0 / encoder::FRAME_RATE as f64);
-    trajectory.add_move(-0.5, 0.0, 0.5, 0.1);
+    let mut trajectory = Trajectory::new(1.0 / encoder::FRAME_RATE as f64);
+    trajectory.add_move(-0.5, 0.0, 0.5, 0.2);
     trajectory.add_move(0.0, 0.25, 0.25, 0.5);
-    trajectory.add_move(-0.25, -0.25, 0.15, 0.5);
+    trajectory.add_move(-0.25, -0.35, 0.30, 0.5);
     trajectory.add_move(-0.5, 0.25, 0.5, 0.5);
     trajectory.add_move(-1.0, 0.0, 0.15, 0.5);
-    trajectory.add_move(-1.5, 0.0, 0.5, 0.1);
+    trajectory.add_move(-1.5, 0.0, 0.5, 0.2);
+    trajectory.smooth(start_pos, 0.5);
 
     set_encoder.open();
     event_loop.run(move |ev, _, control_flow| match ev {
@@ -71,10 +72,7 @@ fn main() {
             renderer.render();
             // set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
 
-            let (new_center, new_scale) = trajectory.step(Point::new(
-                renderer.get_viewport().center_x,
-                renderer.get_viewport().center_y,
-            ), renderer.get_viewport().scale);
+            let (new_center, new_scale) = trajectory.step();
             renderer
                 .get_viewport()
                 .set_center(new_center.x, new_center.y)
