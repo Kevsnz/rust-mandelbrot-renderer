@@ -13,11 +13,10 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(w: u32, h: u32) -> (Self, glium::glutin::event_loop::EventLoop<()>) {
+    pub fn new(w: u32, h: u32, viewport: Viewport) -> (Self, glium::glutin::event_loop::EventLoop<()>) {
         let (event_loop, display) = init_display(w, h);
         let program = crate::shader::get_shader_program(&display);
         let (vertex_buffer, indices) = make_drawing_surface(&display);
-        let viewport = Viewport::new(0.0, 0.0, 0.5);
         (
             Self {
                 display,

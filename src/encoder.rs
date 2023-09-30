@@ -4,7 +4,7 @@ use ffmpeg_next::{
     picture, Packet, Rational,
 };
 
-const FRAME_RATE: i32 = 60;
+pub(crate) const FRAME_RATE: i32 = 60;
 
 pub struct SetEncoder {
     octx: format::context::Output,

@@ -8,6 +8,10 @@ impl Point {
     pub fn new(x: f64, y: f64) -> Point {
         Point { x, y }
     }
+
+    pub fn length(&self) -> f64 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
 }
 
 impl std::ops::Sub for Point {
@@ -43,14 +47,16 @@ impl std::ops::Mul<f64> for Point {
 struct Move {
     target_pos: Point,
     target_scale: f64,
+    speed: f64,
     steps: i32,
 }
 
 impl Move {
-    fn new(target_pos: Point, target_scale: f64, steps: i32) -> Move {
+    fn new(target_pos: Point, target_scale: f64, speed: f64, steps: i32) -> Move {
         Move {
             target_pos,
             target_scale,
+            speed,
             steps,
         }
     }
@@ -68,22 +74,34 @@ impl Move {
 }
 
 pub struct Trajectory {
+    original_position: Point,
     moves: Vec<Move>,
     current_move: usize,
     current_step: i32,
+    dt: f64,
 }
 
 impl Trajectory {
-    pub fn new() -> Trajectory {
+    pub fn new(original_position: Point, dt: f64) -> Trajectory {
         Trajectory {
+            original_position,
             moves: Vec::new(),
             current_move: 0,
             current_step: 0,
+            dt,
         }
     }
 
-    pub fn add_move(&mut self, x: f64, y: f64, scale: f64, steps: i32) {
-        self.moves.push(Move::new(Point::new(x, y), scale, steps));
+    pub fn add_move(&mut self, x: f64, y: f64, scale: f64, speed: f64) {
+        let last_pos = match self.moves.last() {
+            Some(last_move) => last_move.target_pos,
+            None => self.original_position,
+        };
+        let new_pos = Point::new(x, y);
+        let dist = (new_pos - last_pos).length();
+        let steps = (dist / (speed * self.dt)).ceil() as i32;
+
+        self.moves.push(Move::new(new_pos, scale, speed, steps));
     }
 
     pub fn step(&mut self, current_position: Point, current_scale: f64) -> (Point, f64) {

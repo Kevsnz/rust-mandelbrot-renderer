@@ -13,6 +13,7 @@ use glium::glutin::{
     event_loop::ControlFlow,
 };
 use trajectory::{Point, Trajectory};
+use viewport::Viewport;
 
 const WIDTH: u32 = 1680;
 const HEIGHT: u32 = 960;
@@ -20,15 +21,18 @@ const HEIGHT: u32 = 960;
 fn main() {
     let file = "video1.mp4";
     let mut set_encoder = SetEncoder::new(file, WIDTH, HEIGHT);
-    let mut trajectory = Trajectory::new();
-    trajectory.add_move(-0.5, 0.0, 0.5, 300);
-    trajectory.add_move(0.0, 0.25, 0.25, 300);
-    trajectory.add_move(-0.25, -0.25, 0.15, 300);
-    trajectory.add_move(-0.5, 0.25, 0.5, 300);
-    trajectory.add_move(-1.0, 0.0, 0.15, 200);
-    trajectory.add_move(-1.5, 0.0, 0.5, 200);
 
-    let (mut renderer, event_loop) = renderer::Renderer::new(1680, 960);
+    let viewport = Viewport::new(0.0, 0.0, 0.5);
+    let (mut renderer, event_loop) = renderer::Renderer::new(1680, 960, viewport);
+
+    let start_pos = Point::new(renderer.get_viewport().center_x, renderer.get_viewport().center_y);
+    let mut trajectory = Trajectory::new(start_pos, 1.0 / encoder::FRAME_RATE as f64);
+    trajectory.add_move(-0.5, 0.0, 0.5, 0.1);
+    trajectory.add_move(0.0, 0.25, 0.25, 0.5);
+    trajectory.add_move(-0.25, -0.25, 0.15, 0.5);
+    trajectory.add_move(-0.5, 0.25, 0.5, 0.5);
+    trajectory.add_move(-1.0, 0.0, 0.15, 0.5);
+    trajectory.add_move(-1.5, 0.0, 0.5, 0.1);
 
     set_encoder.open();
     let mut frame_counter = 0;
@@ -66,7 +70,7 @@ fn main() {
         }
         Event::RedrawRequested(_) => {
             renderer.render();
-            set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
+            // set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
 
             frame_counter += 1;
             let (new_center, new_scale) = trajectory.step(Point::new(
