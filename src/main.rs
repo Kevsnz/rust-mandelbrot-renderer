@@ -35,7 +35,6 @@ fn main() {
     trajectory.add_move(-1.5, 0.0, 0.5, 0.1);
 
     set_encoder.open();
-    let mut frame_counter = 0;
     event_loop.run(move |ev, _, control_flow| match ev {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => {
@@ -72,7 +71,6 @@ fn main() {
             renderer.render();
             // set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
 
-            frame_counter += 1;
             let (new_center, new_scale) = trajectory.step(Point::new(
                 renderer.get_viewport().center_x,
                 renderer.get_viewport().center_y,
@@ -82,7 +80,7 @@ fn main() {
                 .set_center(new_center.x, new_center.y)
                 .set_scale(new_scale);
 
-            if frame_counter > 9000 || trajectory.finished() {
+            if trajectory.finished() {
                 set_encoder.finalize();
 
                 *control_flow = ControlFlow::Exit;
