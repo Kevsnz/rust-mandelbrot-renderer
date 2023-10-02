@@ -116,16 +116,7 @@ impl Trajectory {
             last_scale = steps_granular.last().unwrap().target_scale;
         }
 
-        let mut steps_smoothed: Vec<Move> = Vec::new();
-        let mut last_pos = original_position;
-        let mut last_scale = original_scale;
-        const A: f64 = 0.9;
-
-        for move_ in steps_granular.iter() {
-            last_pos = last_pos * A + move_.target_pos * (1.0 - A);
-            last_scale = last_scale * A + move_.target_scale * (1.0 - A);
-            steps_smoothed.push(Move::new(last_pos, last_scale, 1.0));
-        }
+        let steps_smoothed = apply_filter(steps_granular, original_position, original_scale);
 
         self.moves = steps_smoothed;
     }
@@ -133,4 +124,22 @@ impl Trajectory {
     pub fn finished(&self) -> bool {
         self.current_move >= self.moves.len()
     }
+}
+
+fn apply_filter(
+    steps_granular: Vec<Move>,
+    original_position: Point,
+    original_scale: f64,
+) -> Vec<Move> {
+    let mut steps_smoothed: Vec<Move> = Vec::new();
+    let mut last_pos = original_position;
+    let mut last_scale = original_scale;
+    const A: f64 = 0.95;
+
+    for move_ in steps_granular.iter() {
+        last_pos = last_pos * A + move_.target_pos * (1.0 - A);
+        last_scale = last_scale * A + move_.target_scale * (1.0 - A);
+        steps_smoothed.push(Move::new(last_pos, last_scale, 1.0));
+    }
+    steps_smoothed
 }
