@@ -19,24 +19,44 @@ const WIDTH: u32 = 1680;
 const HEIGHT: u32 = 960;
 
 fn main() {
-    const START_X: f64 = 0.0;
+    const START_X: f64 = -0.25;
     const START_Y: f64 = 0.0;
-    const START_SCALE: f64 = 0.5;
+    const START_SCALE: f64 = 1.0;
     let file = "video1.mp4";
     
     let viewport = Viewport::new(START_X, START_Y, START_SCALE);
     let start_pos = Point::new(viewport.center_x, viewport.center_y);
 
     let mut trajectory = Trajectory::new(1.0 / encoder::FRAME_RATE as f64);
-    trajectory.add_move(-0.5, 0.0, 0.5, 0.25);
-    trajectory.add_move(-0.7, 0.15, 0.35, 0.25);
-    trajectory.add_move(-1.0, 0.25, 0.15, 0.25);
-    trajectory.add_move(-1.2, 0.32, 0.07, 0.25);
-    trajectory.add_move(-1.24, 0.335, 0.02, 0.25);
-    trajectory.add_move(-1.245, 0.335, 0.005, 0.25);
-    trajectory.add_move(-1.247, 0.335, 0.001, 0.25);
-    trajectory.add_move(-1.2475, 0.335, 0.0001, 0.25);
-    trajectory.add_move(0.0, 0.0, 0.5, 0.25);
+    trajectory.add_move(-0.5, 0.0, 1.0, 0.5);
+    trajectory.add_move(0.25, 0.75, 0.25, 0.25);
+    trajectory.add_move(-0.3, -0.5, 0.25, 0.25);
+    trajectory.add_move(-0.25, 0.6, 0.25, 0.25);
+    trajectory.add_move(-0.25, -0.25, 0.25, 0.25);
+    trajectory.add_move(0.2, -0.4, 0.25, 0.25);
+    trajectory.add_move(0.0, 0.75, 0.25, 0.25);
+    trajectory.add_move(0.5, -0.4, 0.25, 0.25);
+    trajectory.add_move(0.5, -0.2, 0.25, 0.25);
+    trajectory.add_move(-0.5, 0.4, 0.25, 0.25);
+    trajectory.add_move(0.0, -0.75, 0.25, 0.25);
+    trajectory.add_move(-0.5, -0.5, 0.25, 0.25);
+    trajectory.add_move(0.15, -0.6, 0.25, 0.25);
+    trajectory.add_move(-0.5, -1.2, 1.0, 0.25);
+    trajectory.add_move(-0.5, -1.0, 1.5, 0.25);
+    trajectory.add_move(-0.8, -0.25, 2.0, 0.25);
+    trajectory.add_move(-0.25, 0.8, 3.0, 0.25);
+    trajectory.add_move(0.25, 0.75, 4.0, 0.25);
+    trajectory.add_move(0.25, 0.75, 4.0, 0.25);
+    trajectory.add_move(0.9, 0.85, 4.0, 0.25);
+    trajectory.add_move(0.9, 1.5, 4.0, 0.25);
+    trajectory.add_move(1.5, 2.5, 4.0, 0.25);
+    trajectory.add_move(1.0, -4.0, 4.0, 0.25);
+    trajectory.add_move(5.0, -1.0, 4.0, 0.25);
+    trajectory.add_move(4.0, -2.0, 4.0, 0.25);
+    trajectory.add_move(2.0, -2.0, 4.0, 0.5);
+    trajectory.add_move(1.0, -3.0, 4.0, 0.5);
+    trajectory.add_move(0.0, -1.0, 2.0, 0.25);
+    trajectory.add_move(0.0, 0.25, 1.0, 0.25);
     trajectory.smooth(start_pos, viewport.scale);
     // return;
     
@@ -77,7 +97,7 @@ fn main() {
         }
         Event::RedrawRequested(_) => {
             renderer.render();
-            // set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
+            set_encoder.add_frame(&renderer.get_raw_frame(), WIDTH, HEIGHT);
 
             let (new_center, new_scale) = trajectory.step();
             renderer

@@ -93,14 +93,16 @@ impl Trajectory {
 
     pub fn smooth(&mut self, original_position: Point, original_scale: f64) {
         let mut steps_granular: Vec<Move> = Vec::new();
-        let mut last_move = original_position;
+        let mut last_pos = original_position;
         let mut last_scale = original_scale;
         let mut last_speed = self.moves.first().unwrap().speed * original_scale;
 
         let mut step_remainder = 0.0;
         for move_ in self.moves.iter() {
-            let new_speed = move_.speed * move_.target_scale;
-            let dist = (move_.target_pos - last_move).length();
+            let target_pos = last_pos + move_.target_pos * last_scale;
+            let target_scale = last_scale * move_.target_scale;
+            let new_speed = move_.speed * target_scale;
+            let dist = (target_pos - last_pos).length();
             let avg_speed = (last_speed + new_speed) / 2.0;
             let steps = dist / (avg_speed * self.dt) + step_remainder;
             if steps < 1.0 {
@@ -113,16 +115,16 @@ impl Trajectory {
                 let cur_speed = last_speed + (new_speed - last_speed) * (step as f64 / steps);
                 let cur_avg_speed = (last_speed + cur_speed) / 2.0;
                 let ratio = cur_avg_speed * step as f64 / (avg_speed * steps);
-                let new_pos = last_move + (move_.target_pos - last_move) * ratio;
-                let new_scale = last_scale + (move_.target_scale - last_scale) * (step as f64 / steps);
-                steps_granular.push(Move::new(new_pos, new_scale, 1.0));
+                let new_pos = last_pos + (target_pos - last_pos) * ratio;
+                let new_scale = last_scale + (target_scale - last_scale) * ratio;
 
-                if steps_granular.len() > 5000 {
+                steps_granular.push(Move::new(new_pos, new_scale, 1.0));
+                if steps_granular.len() > 50000 {
                     panic!("Too many steps!");
                 }
             }
             step_remainder = steps.fract();
-            last_move = steps_granular.last().unwrap().target_pos;
+            last_pos = steps_granular.last().unwrap().target_pos;
             last_scale = steps_granular.last().unwrap().target_scale;
             last_speed = new_speed;
         }
