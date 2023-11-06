@@ -5,6 +5,8 @@ use ffmpeg_next::{
 };
 
 pub(crate) const FRAME_RATE: i32 = 60;
+pub(crate) const BITRATE: usize = 25_000_000;
+
 
 pub struct SetEncoder {
     octx: format::context::Output,
@@ -26,7 +28,7 @@ impl SetEncoder {
         encoder.set_format(format::Pixel::YUV420P);
         encoder.set_frame_rate(Some(Rational::new(FRAME_RATE, 1)));
         encoder.set_time_base(Rational::new(1, FRAME_RATE));
-        encoder.set_bit_rate(3500000);
+        encoder.set_bit_rate(BITRATE);
         ost.set_parameters(&encoder);
 
         let mut encoder = encoder.open().unwrap();
