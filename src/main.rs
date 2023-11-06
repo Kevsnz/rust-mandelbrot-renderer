@@ -15,8 +15,8 @@ use glium::glutin::{
 use trajectory::{Point, Trajectory};
 use viewport::Viewport;
 
-const WIDTH: u32 = 1680;
-const HEIGHT: u32 = 960;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 fn main() {
     const START_X: f64 = -0.25;
@@ -61,7 +61,7 @@ fn main() {
 
     let mut set_encoder = SetEncoder::new(file, WIDTH, HEIGHT);
     set_encoder.open();
-    let (mut renderer, event_loop) = renderer::Renderer::new(1280, 960, viewport);
+    let (mut renderer, event_loop) = renderer::Renderer::new(WIDTH, HEIGHT, viewport);
     event_loop.run(move |ev, _, control_flow| match ev {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => {
