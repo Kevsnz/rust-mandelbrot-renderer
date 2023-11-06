@@ -23,7 +23,7 @@ fn main() {
     const START_Y: f64 = 0.0;
     const START_SCALE: f64 = 1.0;
     let file = "video1.mp4";
-    
+
     let viewport = Viewport::new(START_X, START_Y, START_SCALE);
     let start_pos = Point::new(viewport.center_x, viewport.center_y);
 
@@ -56,16 +56,16 @@ fn main() {
     trajectory.add_move(2.0, -2.0, 4.0, 0.5);
     trajectory.add_move(1.0, -3.0, 4.0, 0.5);
     trajectory.add_move(0.0, -1.0, 2.0, 0.25);
-    trajectory.add_move(0.0, 0.25, 1.0, 0.25);
+    trajectory.add_move(0.0, 0.3, 1.0, 0.25);
     trajectory.smooth(start_pos, viewport.scale);
-    // return;
-    
+
     let mut set_encoder = SetEncoder::new(file, WIDTH, HEIGHT);
     set_encoder.open();
     let (mut renderer, event_loop) = renderer::Renderer::new(1280, 960, viewport);
     event_loop.run(move |ev, _, control_flow| match ev {
         Event::WindowEvent { event, .. } => match event {
             WindowEvent::CloseRequested => {
+                set_encoder.finalize();
                 *control_flow = ControlFlow::Exit;
             }
             WindowEvent::Resized(window_size) => {
@@ -74,7 +74,10 @@ fn main() {
             WindowEvent::KeyboardInput { input, .. } => {
                 if let ElementState::Pressed = input.state {
                     match input.virtual_keycode {
-                        Some(VirtualKeyCode::Escape) => *control_flow = ControlFlow::Exit,
+                        Some(VirtualKeyCode::Escape) => {
+                            set_encoder.finalize();
+                            *control_flow = ControlFlow::Exit;
+                        }
                         Some(VirtualKeyCode::NumpadAdd) => renderer.get_viewport().zoom_in(None),
                         Some(VirtualKeyCode::NumpadSubtract) => {
                             renderer.get_viewport().zoom_out(None)
