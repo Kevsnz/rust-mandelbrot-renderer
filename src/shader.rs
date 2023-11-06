@@ -1,77 +1,21 @@
-const VERTEX_SHADER_SRC: &str = r#"
+use std::{fs::File, io::Read};
 
-#version 400
+pub const VERTEX_PROGRAM_FILENAME: &str = "vertex.glsl";
+pub const FRAGMENT_PROGRAM_SINGLE_FILENAME: &str = "fragment_single.glsl";
+pub const FRAGMENT_PROGRAM_SSX4_FILENAME: &str = "fragment_ssx4.glsl";
 
-in vec2 position;
-in vec2 coord;
-out vec2 pos;
+pub fn load_shader_programs(display: &glium::Display, vertex_filename: &str, fragment_filename: &str) -> glium::Program {
+    let mut vertex_shader_code = String::new();
+    File::open(vertex_filename)
+        .unwrap()
+        .read_to_string(&mut vertex_shader_code)
+        .unwrap();
 
-void main() {
-    pos = coord;
-    gl_Position = vec4(position, 0.0, 1.0);
-}
-"#;
+    let mut fragment_shader_code = String::new();
+    File::open(fragment_filename)
+        .unwrap()
+        .read_to_string(&mut fragment_shader_code)
+        .unwrap();
 
-const FRAGMENT_SHADER_SRC: &str = r#"
-
-#version 400
-
-uniform double ar;
-uniform double offset_x;
-uniform double offset_y;
-uniform double scale;
-
-in vec2 pos;
-out vec4 color;
-
-dvec2 csqr(dvec2 c1) {
-    return dvec2(c1.x*c1.x - c1.y*c1.y, 2*c1.x*c1.y);
-}
-
-int calc(dvec2 c, double lim, int it) {
-    dvec2 z = dvec2(0, 0);
-    for (int i=0; i<it; i++) {
-        z = csqr(z) + c;
-        if (length(z) > lim) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-vec3 get_color(float t) {
-    vec3 colors[8];
-    colors[0] = vec3(0.0, 0.0, 0.0);
-    colors[1] = vec3(0.0, 0.0, 0.5);
-    colors[2] = vec3(0.0, 0.0, 1.0);
-    colors[3] = vec3(0.0, 1.0, 1.0);
-    colors[4] = vec3(0.0, 1.0, 0.0);
-    colors[5] = vec3(1.0, 0.0, 0.0);
-    colors[6] = vec3(1.0, 1.0, 0.0);
-    colors[7] = vec3(1.0, 1.0, 1.0);
-
-    t *= 8.0;
-    int a = int(floor(t));
-    int b = int(ceil(t));
-    return mix(colors[a], colors[b], t-a);
-}
-
-void main() {
-    dvec2 c = dvec2(pos);
-    c.x *= ar;
-    c = c * scale + dvec2(offset_x, offset_y);
-    int s = calc(c, 3, 200);
-    if (s == -1) {
-        color = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-    else {
-        float t = float(s) / 100.0;
-        color = vec4(get_color(t), 1.0);
-    }
-}
-
-"#;
-
-pub fn get_shader_program(display: &glium::Display) -> glium::Program {
-    glium::Program::from_source(display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None).unwrap()
+    glium::Program::from_source(display, &vertex_shader_code, &fragment_shader_code, None).unwrap()
 }

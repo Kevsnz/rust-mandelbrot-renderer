@@ -13,9 +13,17 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(w: u32, h: u32, viewport: Viewport) -> (Self, glium::glutin::event_loop::EventLoop<()>) {
+    pub fn new(
+        w: u32,
+        h: u32,
+        viewport: Viewport,
+    ) -> (Self, glium::glutin::event_loop::EventLoop<()>) {
         let (event_loop, display) = init_display(w, h);
-        let program = crate::shader::get_shader_program(&display);
+        let program = crate::shader::load_shader_programs(
+            &display,
+            crate::shader::VERTEX_PROGRAM_FILENAME,
+            crate::shader::FRAGMENT_PROGRAM_SINGLE_FILENAME,
+        );
         let (vertex_buffer, indices) = make_drawing_surface(&display);
         (
             Self {
@@ -39,7 +47,6 @@ impl Renderer {
             .add("offset_y", self.viewport.center_y);
 
         let mut frame = self.display.draw();
-        frame.clear_color(0.0, 0.0, 1.0, 1.0);
         frame
             .draw(
                 &self.vertex_buffer,
